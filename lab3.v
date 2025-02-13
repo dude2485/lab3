@@ -1,9 +1,9 @@
 `timescale 1ns / 1ps
 
-module tenHz_gen(
+module 1Hz_gen(
     input clk_100MHz,
     input reset,
-    output clk_10Hz
+    output clk_1Hz
     );
     
     reg [22:0] ctr_reg = 0; // 23 bits to cover 5,000,000
@@ -15,19 +15,19 @@ module tenHz_gen(
             clk_out_reg <= 0;
         end
         else
-            if(ctr_reg == 4_999_999) begin  // 100MHz / 10Hz / 2 = 5,000,000
+            if(ctr_reg == 49_999_999) begin  // 100MHz / 1Hz / 2 = 50,000,000
                 ctr_reg <= 0;
                 clk_out_reg <= ~clk_out_reg;
             end
             else
                 ctr_reg <= ctr_reg + 1;
     
-    assign clk_10Hz = clk_out_reg;
+    assign clk_1Hz = clk_out_reg;
     
 endmodule
 
 module digits(
-    input clk_10Hz,
+    input clk_1Hz,
     input reset,
     output reg [3:0] ones,
     output reg [3:0] tens,
@@ -36,7 +36,7 @@ module digits(
     );
     
     // ones reg control
-    always @(posedge clk_10Hz or posedge reset)
+    always @(posedge clk_1Hz or posedge reset)
         if(reset)
             ones <= 0;
         else
@@ -46,7 +46,7 @@ module digits(
                 ones <= ones + 1;
          
     // tens reg control       
-    always @(posedge clk_10Hz or posedge reset)
+    always @(posedge clk_1Hz or posedge reset)
         if(reset)
             tens <= 0;
         else
@@ -57,7 +57,7 @@ module digits(
                     tens <= tens + 1;
       
     // hundreds reg control              
-    always @(posedge clk_10Hz or posedge reset)
+    always @(posedge clk_1Hz or posedge reset)
         if(reset)
             hundreds <= 0;
         else
@@ -68,7 +68,7 @@ module digits(
                     hundreds <= hundreds + 1;
      
     // thousands reg control                
-    always @(posedge clk_10Hz or posedge reset)
+    always @(posedge clk_1Hz or posedge reset)
         if(reset)
             thousands <= 0;
         else
@@ -206,13 +206,13 @@ module counter(
     );
     
     // Internal wires for connecting inner modules
-    wire w_10Hz;
+    wire w_1Hz;
     wire [3:0] w_1s, w_10s, w_100s, w_1000s;
     
     // Instantiate inner design modules
-    tenHz_gen hz10(.clk_100MHz(clk_100MHz), .reset(reset), .clk_10Hz(w_10Hz));
+    1Hz_gen hz1(.clk_100MHz(clk_100MHz), .reset(reset), .clk_1Hz(w_1Hz));
     
-    digits digs(.clk_10Hz(w_10Hz), .reset(reset), .ones(w_1s), 
+    digits digs(.clk_10Hz(w_1Hz), .reset(reset), .ones(w_1s), 
                 .tens(w_10s), .hundreds(w_100s), .thousands(w_1000s));
     
     seg7_control seg7(.clk_100MHz(clk_100MHz), .reset(reset), .ones(w_1s), .tens(w_10s),
